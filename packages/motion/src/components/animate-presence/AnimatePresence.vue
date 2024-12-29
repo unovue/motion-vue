@@ -4,7 +4,6 @@ import { mountedStates } from '@/state'
 import { doneCallbacks, provideAnimatePresence, removeDoneCallback } from '@/components/presence'
 import type { AnimatePresenceProps } from './types'
 import { usePopLayout } from './use-pop-layout'
-import { createStyles } from '@/state/style'
 // 定义组件Props接口
 
 // 定义组件选项
@@ -33,12 +32,6 @@ onMounted(() => {
 // 处理元素进入动画
 function enter(el: HTMLElement) {
   const state = mountedStates.get(el)
-  const motionStateId = el.dataset.motionId
-  const motionState = mountedStates.get(motionStateId)
-  if (motionState) {
-    const baseStyle = createStyles(motionState.baseTarget)
-    Object.assign(el.style, baseStyle)
-  }
   if (!state) {
     return
   }

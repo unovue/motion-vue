@@ -38,16 +38,6 @@ export function shallowCompare(next: any[], prev: any[]) {
   return true
 }
 
-export function addUniqueItem<T>(array: T[], item: T) {
-  !array.includes(item) && array.push(item)
-}
-
-export function removeItem<T>(array: T[], item: T) {
-  const index = array.indexOf(item)
-
-  index !== -1 && array.splice(index, 1)
-}
-
 export function getOptions(options: DynamicAnimationOptions, key: string): DynamicAnimationOptions {
   return options[key as any] ? { ...options, ...options[key as any] } : { ...options }
 }
