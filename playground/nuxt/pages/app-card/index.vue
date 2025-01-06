@@ -22,34 +22,39 @@ useEventListener('keydown', (event: KeyboardEvent) => {
   <div class="h-screen w-screen">
     <!-- <MotionConfig> -->
     <LayoutGroup>
-      <div class="cards-wrapper">
-        <CardItem
-          v-for="(card, i) in CARDS"
-          :key="card.id"
-          :card="card"
-          :data-id="cardId"
-          @select="() => {
-            cardId = CARDS[i].id
-          }"
-        />
-        <AnimatePresence>
-          <Motion
-            v-show="activeCard"
-            :initial="{ opacity: 0 }"
-            :animate="{ opacity: 1 }"
-            :exit="{ opacity: 0 }"
-            class=" overlay pointer-events-none"
+      <template #default="{ forceRender }">
+        <div
+          class="cards-wrapper"
+          @click="forceRender"
+        >
+          <CardItem
+            v-for="(card, i) in CARDS"
+            :key="card.id"
+            :card="card"
+            :data-id="cardId"
+            @select="() => {
+              cardId = CARDS[i].id
+            }"
           />
-        </AnimatePresence>
+          <AnimatePresence>
+            <Motion
+              v-show="activeCard"
+              :initial="{ opacity: 0 }"
+              :animate="{ opacity: 1 }"
+              :exit="{ opacity: 0 }"
+              class=" overlay pointer-events-none"
+            />
+          </AnimatePresence>
 
-        <AnimatePresence>
-          <ActiveCard
-            v-if="activeCard"
-            :card="activeCard || {}"
-            @close="cardId = null"
-          />
-        </AnimatePresence>
-      </div>
+          <AnimatePresence>
+            <ActiveCard
+              v-if="activeCard"
+              :card="activeCard || {}"
+              @close="cardId = null"
+            />
+          </AnimatePresence>
+        </div>
+      </template>
     </LayoutGroup>
   </div>
 </template>

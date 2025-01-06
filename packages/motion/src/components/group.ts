@@ -36,7 +36,7 @@ export function nodeGroup(): NodeGroup {
     },
     dirty: dirtyAll,
     didUpdate: () => {
-      nodes[0]?.didUpdate()
+      nodes[0]?.root.didUpdate()
     },
   }
 }

@@ -6,6 +6,8 @@ import { isMotionValue } from '@/utils'
 import { checkMotionIsHidden, getMotionElement } from './utils'
 import type { ElementType, Options, SVGAttributesWithMotionValues, SetMotionValueType } from '@/types'
 import { useMotionConfig } from './motion-config/context'
+import type { AnimationControls } from '@/animation/types'
+import { isAnimationControls } from '@/animation/is-animation-controls'
 </script>
 
 <script setup lang="ts" generic="T extends ElementType = 'div', K = unknown">
@@ -91,6 +93,9 @@ onBeforeMount(() => {
 
 onMounted(() => {
   state.mount(getMotionElement(instance.$el), getMotionProps(), checkMotionIsHidden(instance))
+  if (isAnimationControls(props.animate)) {
+    return (props.animate as AnimationControls).subscribe(state)
+  }
 })
 
 onBeforeUnmount(() => state.beforeUnmount())

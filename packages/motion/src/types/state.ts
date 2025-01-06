@@ -10,6 +10,7 @@ import type { InViewProps } from '@/features/gestures/in-view/types'
 import type { LayoutGroupState } from '@/components/context'
 import type { PanProps } from '@/features/gestures/pan/types'
 import type { MotionConfigState } from '@/components/motion-config/types'
+import type { AnimationControls } from '@/animation/types'
 
 type AnimationPlaybackControls = ReturnType<typeof animate>
 export interface Orchestration {
@@ -57,7 +58,7 @@ export interface Options<T = any> extends
   custom?: T
   as?: ElementType
   initial?: string | Variant | boolean
-  animate?: string | Variant
+  animate?: string | Variant | AnimationControls
   exit?: string | Variant
   variants?: {
     [k: string]: Variant | ((custom: T) => Variant)

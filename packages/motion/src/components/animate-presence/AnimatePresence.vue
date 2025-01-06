@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Transition, TransitionGroup, onMounted, onUnmounted } from 'vue'
+import { Transition, TransitionGroup, computed, onMounted, onUnmounted } from 'vue'
 import { mountedStates } from '@/state'
 import { doneCallbacks, provideAnimatePresence, removeDoneCallback } from '@/components/presence'
 import type { AnimatePresenceProps } from './types'
@@ -9,7 +9,7 @@ import { usePopLayout } from './use-pop-layout'
 // 定义组件选项
 defineOptions({
   name: 'AnimatePresence',
-  inheritAttrs: true,
+  inheritAttrs: false,
 })
 
 // 设置Props默认值
@@ -79,15 +79,19 @@ function exit(el: Element, done: VoidFunction) {
   el.addEventListener('motioncomplete', doneCallback)
   state.setActive('exit', true)
 }
+
+const hasRoot = computed(() => {
+  return props.multiple
+})
 </script>
 
 <template>
-  <!-- 根据multiple属性动态选择Transition或TransitionGroup组件 -->
   <component
     :is="multiple ? TransitionGroup : Transition"
     :tag="multiple ? as : undefined"
     :css="false"
     :mode="mode === 'wait' ? 'out-in' : undefined"
+    v-bind="hasRoot ? $attrs : {}"
     @enter="enter"
     @leave="exit"
   >

@@ -13,6 +13,7 @@ import { motionEvent } from '@/state/event'
 import { createVisualElement } from '@/state/create-visual-element'
 import { type ActiveVariant, animateVariantsChildren } from '@/state/animate-variants-children'
 import { doneCallbacks } from '@/components/presence'
+import { isAnimationControls } from '@/animation/is-animation-controls'
 
 const STATE_TYPES = ['initial', 'animate', 'inView', 'hover', 'press', 'whileDrag', 'exit'] as const
 type StateType = typeof STATE_TYPES[number]
@@ -202,48 +203,54 @@ export class MotionState {
     }
   }
 
-  animateUpdates(isInitial = false) {
+  animateUpdates(isInitial = false, definition?: Options['exit'], transitionOverride?: Options['transition']) {
     const prevTarget = this.target
     this.target = {}
     const activeState: ActiveVariant = {}
     const animationOptions: { [key: string]: DynamicAnimationOptions } = {}
     let transition: AnimateOptions
-    for (const name of STATE_TYPES) {
-      if (name === 'initial') {
-        if (!isInitial) {
-          continue
-        }
-      }
-      if (!this.activeStates[name] && name !== 'initial') {
-        continue
-      }
-      const definition = isDef(this.options[name]) ? this.options[name] : this.context[name]
+    const processVariant = (variant: any, transition: AnimateOptions, name?: string, definition?: any) => {
+      if (!variant)
+        return false
 
-      const variant = resolveVariant(
-        definition,
-        this.options.variants,
-        this.options.custom,
-      )
-      transition = Object.assign({}, this.options.transition, variant?.transition)
-      if (typeof definition === 'string') {
+      if (typeof definition === 'string' && name) {
         activeState[name] = {
           definition,
           transition,
         }
       }
-      if (!variant)
-        continue
+
       const allTarget = { ...prevTarget, ...variant }
       for (const key in allTarget) {
         if (key === 'transition')
           continue
 
         this.target[key] = variant[key]
+        animationOptions[key] = getOptions(transition, key)
+      }
+      return true
+    }
 
-        animationOptions[key] = getOptions(
-          transition,
-          key,
-        )
+    if (definition) {
+      const variant = resolveVariant(definition, this.options.variants, this.options.custom)
+      transition = Object.assign({}, this.options.transition, variant?.transition, transitionOverride)
+      if (!processVariant(variant, transition, 'animate', definition))
+        return
+    }
+    else {
+      for (const name of STATE_TYPES) {
+        if ((name === 'initial' && !isInitial) || (!this.activeStates[name] && name !== 'initial'))
+          continue
+
+        const definition = isDef(this.options[name]) ? this.options[name] : this.context[name]
+        if (isAnimationControls(definition)) {
+          continue
+        }
+        const variant = resolveVariant(definition, this.options.variants, this.options.custom)
+        transition = Object.assign({}, this.options.transition, variant?.transition)
+
+        if (!processVariant(variant, transition, name, definition))
+          continue
       }
     }
 
@@ -256,9 +263,10 @@ export class MotionState {
       if (this.target[key] === undefined) {
         this.target[key] = this.baseTarget[key]
       }
-      if (hasChanged(prevTarget[key], this.target[key])) {
+      if (hasChanged(this.visualElement.getValue(key), this.target[key])) {
         this.baseTarget[key] ??= style.get(this.element, key) as string
         const keyValue = this.target[key] === 'none' ? transformResetValue[key] : this.target[key]
+
         animationFactories.push(
           () => {
             return animate(
@@ -325,7 +333,7 @@ export class MotionState {
     }
     const animationTarget = this.target
     this.element.dispatchEvent(motionEvent('motionstart', animationTarget))
-    animationPromise
+    return animationPromise
       .then(() => {
         this.element.dispatchEvent(motionEvent('motioncomplete', {
           ...animationTarget,

@@ -1,10 +1,12 @@
 import { setTarget } from '@/render/utils/setters'
-import type { AnimationDefinition, VisualElement } from 'framer-motion'
+import type { VisualElement } from 'framer-motion'
 import { invariant } from 'hey-listen'
 import type { AnimationControls } from './types'
+import type { MotionState } from '@/state'
+import type { Variant } from '@/types'
 
-function stopAnimation(visualElement: VisualElement) {
-  visualElement.values.forEach(value => value.stop())
+function stopAnimation(state: MotionState) {
+  state.visualElement.values.forEach(value => value.stop())
 }
 
 function setVariants(visualElement: VisualElement, variantLabels: string[]) {
@@ -24,17 +26,17 @@ function setVariants(visualElement: VisualElement, variantLabels: string[]) {
 
 export function setValues(
   visualElement: VisualElement,
-  definition: AnimationDefinition,
+  definition: Variant,
 ) {
-  if (Array.isArray(definition)) {
-    return setVariants(visualElement, definition)
-  }
-  else if (typeof definition === 'string') {
-    return setVariants(visualElement, [definition])
-  }
-  else {
-    setTarget(visualElement, definition as any)
-  }
+  // if (Array.isArray(definition)) {
+  //   return setVariants(visualElement, definition)
+  // }
+  // else if (typeof definition === 'string') {
+  //   return setVariants(visualElement, [definition])
+  // }
+  // else {
+  setTarget(visualElement, definition as any)
+  // }
 }
 
 /**
@@ -49,12 +51,12 @@ export function animationControls(): AnimationControls {
   /**
    * A collection of linked component animation controls.
    */
-  const subscribers = new Set<VisualElement>()
+  const subscribers = new Set<MotionState>()
 
   const controls: AnimationControls = {
-    subscribe(visualElement) {
-      subscribers.add(visualElement)
-      return () => void subscribers.delete(visualElement)
+    subscribe(state) {
+      subscribers.add(state)
+      return () => void subscribers.delete(state)
     },
 
     start(definition, transitionOverride) {
@@ -64,31 +66,27 @@ export function animationControls(): AnimationControls {
       )
 
       const animations: Array<Promise<any>> = []
-      // subscribers.forEach((visualElement) => {
-      //   animations.push(
-      //     animateVisualElement(visualElement, definition, {
-      //       transitionOverride,
-      //     }),
-      //   )
-      // })
+      subscribers.forEach((state) => {
+        animations.push(state.animateUpdates(false, definition, transitionOverride),
+        )
+      })
 
       return Promise.all(animations)
     },
-
     set(definition) {
       invariant(
         hasMounted,
         'controls.set() should only be called after a component has mounted. Consider calling within a useEffect hook.',
       )
 
-      return subscribers.forEach((visualElement) => {
-        setValues(visualElement, definition)
+      return subscribers.forEach((state) => {
+        setValues(state.visualElement, definition as Variant)
       })
     },
 
     stop() {
-      subscribers.forEach((visualElement) => {
-        stopAnimation(visualElement)
+      subscribers.forEach((state) => {
+        stopAnimation(state)
       })
     },
 
