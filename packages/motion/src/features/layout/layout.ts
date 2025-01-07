@@ -61,7 +61,7 @@ export class LayoutFeature extends Feature {
     if (layoutGroup?.group && projection)
       layoutGroup.group.remove(projection)
     if (this.state.options.layoutId || this.state.options.layout) {
-      this.state.visualElement.projection?.root?.didUpdate()
+      this.state.unMountNeedUpdate && this.state.visualElement.projection?.root?.didUpdate()
     }
   }
 }

@@ -4,6 +4,7 @@ import { mountedStates } from '@/state'
 import { doneCallbacks, provideAnimatePresence, removeDoneCallback } from '@/components/presence'
 import type { AnimatePresenceProps } from './types'
 import { usePopLayout } from './use-pop-layout'
+import { frame } from 'framer-motion/dom'
 // 定义组件Props接口
 
 // 定义组件选项
@@ -39,7 +40,7 @@ function enter(el: HTMLElement) {
   state.setActive('exit', false)
 }
 
-const { addPopStyle, removePopStyle } = usePopLayout(props)
+const { addPopStyle, removePopStyle, styles } = usePopLayout(props)
 
 const exitDom = new Map<Element, boolean>()
 
@@ -62,13 +63,19 @@ function exit(el: Element, done: VoidFunction) {
       if ((projection?.animationProgress > 0 && !state.isSafeToRemove)) {
         return
       }
-      state.willUpdate('done')
-      removePopStyle(state)
       removeDoneCallback(el)
       exitDom.delete(el)
       if (exitDom.size === 0) {
         props.onExitComplete?.()
       }
+      state.willUpdate('done')
+      if (styles.get(state)) {
+        state.unMountNeedUpdate = false
+        setTimeout(() => {
+          removePopStyle(state)
+        }, 20)
+      }
+
       done()
       if (!el?.isConnected) {
         state.unmount(true)

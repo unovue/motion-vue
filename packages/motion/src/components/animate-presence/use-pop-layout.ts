@@ -50,5 +50,6 @@ export function usePopLayout(props: AnimatePresenceProps) {
   return {
     addPopStyle,
     removePopStyle,
+    styles,
   }
 }

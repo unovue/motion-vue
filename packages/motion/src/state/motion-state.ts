@@ -25,8 +25,7 @@ export class MotionState {
   private parent?: MotionState
   public options: Options
   public isSafeToRemove = false
-  public isFirstAnimate = true
-
+  public unMountNeedUpdate = true
   private children?: Set<MotionState> = new Set()
   public activeStates: Partial<Record<StateType, boolean>> = {
     // initial: true,
@@ -160,15 +159,19 @@ export class MotionState {
 
   unmount(unMountChildren = false) {
     mountedStates.delete(this.element)
-    this.featureManager.unmount()
-    this.visualElement?.unmount()
     if (unMountChildren) {
       const unmountChild = (child: MotionState) => {
+        if (!this.unMountNeedUpdate) {
+          child.unMountNeedUpdate = false
+        }
         child.unmount(true)
         child.children?.forEach(unmountChild)
       }
-      this.children?.forEach(unmountChild)
+      Array.from(this.children).forEach(unmountChild)
     }
+    this.parent?.children?.delete(this)
+    this.featureManager.unmount()
+    this.visualElement?.unmount()
   }
 
   beforeUpdate() {
